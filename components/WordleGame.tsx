@@ -28,6 +28,16 @@ type KeyboardState = Record<string, LetterState | undefined>;
 const KEYBOARD_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
 const STATS_STORAGE_KEY = "wordle-practice/stats";
 
+export function openStatsModal() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("wordle:stats-open"));
+}
+
+export function closeStatsModal() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("wordle:stats-close"));
+}
+
 interface GameStats {
   totalPlayed: number;
   totalWon: number;
@@ -55,6 +65,7 @@ export function WordleGame() {
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   const setGuessValue = useCallback((value: string) => {
@@ -316,6 +327,18 @@ export function WordleGame() {
     return () => window.removeEventListener("keydown", handlePhysicalKeyboard);
   }, [handlePhysicalKeyboard]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const openListener = () => setIsStatsOpen(true);
+    const closeListener = () => setIsStatsOpen(false);
+    window.addEventListener("wordle:stats-open", openListener);
+    window.addEventListener("wordle:stats-close", closeListener);
+    return () => {
+      window.removeEventListener("wordle:stats-open", openListener);
+      window.removeEventListener("wordle:stats-close", closeListener);
+    };
+  }, []);
+
   const startNewGame = useCallback(() => {
     startTransition(() => {
       setBoard(getEmptyBoard());
@@ -334,11 +357,6 @@ export function WordleGame() {
   return (
     <div className="relative flex w-full max-w-3xl flex-col items-center gap-5 sm:gap-6">
       <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-3 text-sm uppercase tracking-[0.35em] text-zinc-500">
-          <span>Practice Mode</span>
-          <span aria-hidden className="text-zinc-800">•</span>
-          <span>{status === "playing" ? "Guess the word" : status === "won" ? "You won!" : "Better luck next time"}</span>
-        </div>
         {alert && (
           <div className="rounded bg-zinc-900 px-3 py-1 text-sm font-medium text-zinc-200 shadow">
             {alert}
@@ -362,12 +380,6 @@ export function WordleGame() {
         aria-label="Type your Wordle guess"
         className="absolute left-1/2 top-1/2 h-0 w-0 -translate-x-1/2 -translate-y-1/2 opacity-0"
       />
-
-      {statsLoaded && (
-        <StatsSummary
-          stats={stats}
-        />
-      )}
 
       {!isInputFocused && isTouchDevice && status === "playing" && (
         <button
@@ -396,6 +408,15 @@ export function WordleGame() {
         >
           New Game
         </button>
+      )}
+
+      {statsLoaded && (
+        <StatsModal
+          open={isStatsOpen}
+          onClose={() => setIsStatsOpen(false)}
+          stats={stats}
+          onNewGame={status !== "playing" ? startNewGame : undefined}
+        />
       )}
     </div>
   );
@@ -429,6 +450,59 @@ function StatsSummary({ stats }: StatsSummaryProps) {
       </div>
       <div className="col-span-2 mt-1 text-[0.65rem] uppercase tracking-[0.35em] text-zinc-500 sm:col-span-4">
         Max streak: <span className="text-zinc-300">{stats.maxStreak}</span>
+      </div>
+    </div>
+  );
+}
+
+interface StatsModalProps {
+  open: boolean;
+  onClose: () => void;
+  stats: GameStats;
+  onNewGame?: () => void;
+}
+
+function StatsModal({ open, onClose, stats, onNewGame }: StatsModalProps) {
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose, open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10 backdrop-blur-sm">
+      <div className="relative w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-950/95 p-6 shadow-xl">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 text-sm uppercase tracking-[0.3em] text-zinc-500 transition hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
+        >
+          Close
+        </button>
+        <h2 className="mb-4 text-center text-base font-semibold uppercase tracking-[0.4em] text-zinc-300">
+          Stats
+        </h2>
+        <StatsSummary stats={stats} />
+
+        {onNewGame && (
+          <button
+            type="button"
+            onClick={() => {
+              onNewGame();
+              onClose();
+            }}
+            className="mt-5 w-full rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-emerald-950 transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+          >
+            New Game
+          </button>
+        )}
       </div>
     </div>
   );
