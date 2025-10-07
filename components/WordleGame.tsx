@@ -8,7 +8,7 @@ import {
   useState,
   useTransition,
   type ChangeEvent,
-  type KeyboardEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import {
   LetterEvaluation,
@@ -127,7 +127,7 @@ export function WordleGame() {
       return row.map((cell, cellIndex) => {
         if (cell.state !== "empty") return cell;
         const letter = currentGuess[cellIndex] ?? "";
-        return { letter, state: "empty" };
+        return { letter, state: "empty" as LetterState };
       });
     });
   }, [board, currentRow, currentGuess]);
@@ -250,7 +250,7 @@ export function WordleGame() {
   }, [commitGuess, currentGuess, focusHiddenInput, isInputFocused, status]);
 
   const handleInputKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
+    (event: ReactKeyboardEvent<HTMLInputElement>) => {
       const { key } = event;
       if (status !== "playing") {
         event.preventDefault();
@@ -282,7 +282,7 @@ export function WordleGame() {
   );
 
   const handlePhysicalKeyboard = useCallback(
-    (event: KeyboardEvent) => {
+    (event: globalThis.KeyboardEvent) => {
       const { key } = event;
 
       if (key === "Enter") {
@@ -348,7 +348,7 @@ export function WordleGame() {
         onKeyDown={handleInputKeyDown}
         onFocus={handleInputFocus}
         onBlur={handleInputBlur}
-        inputMode="latin"
+        inputMode="text"
         autoCapitalize="none"
         autoComplete="off"
         autoCorrect="off"
