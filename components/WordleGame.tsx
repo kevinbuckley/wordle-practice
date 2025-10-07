@@ -102,6 +102,12 @@ export function WordleGame() {
   }, []);
 
   useEffect(() => {
+    if (isTouchDevice && status === "playing") {
+      focusHiddenInput();
+    }
+  }, [focusHiddenInput, isTouchDevice, status]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const stored = window.localStorage.getItem(STATS_STORAGE_KEY);
@@ -354,7 +360,7 @@ export function WordleGame() {
         autoCorrect="off"
         spellCheck={false}
         aria-label="Type your Wordle guess"
-        className="sr-only"
+        className="absolute left-1/2 top-1/2 h-0 w-0 -translate-x-1/2 -translate-y-1/2 opacity-0"
       />
 
       {statsLoaded && (
@@ -436,10 +442,9 @@ interface BoardProps {
 function Board({ board, onActivate }: BoardProps) {
   return (
     <div
-      className="grid select-none gap-1.5 cursor-text sm:gap-2"
+      className="grid w-full max-w-[min(100%,320px)] select-none gap-1.5 cursor-text sm:max-w-none sm:gap-2"
       onClick={onActivate}
-      onTouchStart={(event) => {
-        event.preventDefault();
+      onTouchStart={() => {
         onActivate();
       }}
       aria-label="Word grid"
@@ -523,9 +528,9 @@ interface KeyboardProps {
 
 function Keyboard({ keyboardState, onLetter, onEnter, onBackspace }: KeyboardProps) {
   return (
-    <div className="flex w-full max-w-3xl flex-col items-center gap-1.5 sm:gap-2">
+    <div className="flex w-full max-w-[min(100%,360px)] flex-col items-center gap-1.5 sm:max-w-3xl sm:gap-2">
       {KEYBOARD_ROWS.map((row, rowIndex) => (
-        <div key={`keyboard-row-${row}`} className="flex w-full justify-center gap-1.5 sm:gap-2">
+        <div key={`keyboard-row-${row}`} className="flex w-full justify-center gap-1.5 px-1 sm:gap-2 sm:px-0">
           {rowIndex === 2 && (
             <KeyboardKey label="enter" onClick={onEnter} className="px-4 text-xs uppercase tracking-[0.2em]" />
           )}
@@ -561,17 +566,17 @@ interface KeyboardKeyProps {
 
 function KeyboardKey({ label, state, onClick, className }: KeyboardKeyProps) {
   let base =
-    "flex h-11 min-w-[38px] items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 px-2 text-xs font-semibold uppercase text-zinc-200 transition hover:bg-zinc-800 active:scale-[0.98] sm:h-12 sm:min-w-[44px] sm:text-sm";
+    "flex h-10 min-w-[34px] items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 px-1.5 text-xs font-semibold uppercase text-zinc-200 transition hover:bg-zinc-800 active:scale-[0.98] sm:h-12 sm:min-w-[44px] sm:px-2 sm:text-sm";
 
   if (state === "correct") {
     base =
-      "flex h-11 min-w-[38px] items-center justify-center rounded-md border border-emerald-500 bg-emerald-500 px-2 text-xs font-semibold uppercase text-emerald-950 transition hover:brightness-110 active:scale-[0.98] sm:h-12 sm:min-w-[44px] sm:text-sm";
+      "flex h-10 min-w-[34px] items-center justify-center rounded-md border border-emerald-500 bg-emerald-500 px-1.5 text-xs font-semibold uppercase text-emerald-950 transition hover:brightness-110 active:scale-[0.98] sm:h-12 sm:min-w-[44px] sm:px-2 sm:text-sm";
   } else if (state === "present") {
     base =
-      "flex h-11 min-w-[38px] items-center justify-center rounded-md border border-amber-400 bg-amber-400 px-2 text-xs font-semibold uppercase text-amber-950 transition hover:brightness-110 active:scale-[0.98] sm:h-12 sm:min-w-[44px] sm:text-sm";
+      "flex h-10 min-w-[34px] items-center justify-center rounded-md border border-amber-400 bg-amber-400 px-1.5 text-xs font-semibold uppercase text-amber-950 transition hover:brightness-110 active:scale-[0.98] sm:h-12 sm:min-w-[44px] sm:px-2 sm:text-sm";
   } else if (state === "absent") {
     base =
-      "flex h-11 min-w-[38px] items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 px-2 text-xs font-semibold uppercase text-zinc-500 transition hover:brightness-110 active:scale-[0.98] sm:h-12 sm:min-w-[44px] sm:text-sm";
+      "flex h-10 min-w-[34px] items-center justify-center rounded-md border border-zinc-700 bg-zinc-800 px-1.5 text-xs font-semibold uppercase text-zinc-500 transition hover:brightness-110 active:scale-[0.98] sm:h-12 sm:min-w-[44px] sm:px-2 sm:text-sm";
   }
 
   return (
