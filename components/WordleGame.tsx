@@ -356,12 +356,16 @@ export function WordleGame() {
 
   return (
     <div className="relative flex w-full max-w-3xl flex-col items-center gap-5 sm:gap-6">
-      <div className="flex flex-col items-center gap-3">
-        {alert && (
-          <div className="rounded bg-zinc-900 px-3 py-1 text-sm font-medium text-zinc-200 shadow">
-            {alert}
-          </div>
-        )}
+      <div className="flex h-10 w-full max-w-[min(100%,320px)] items-center justify-center sm:max-w-sm">
+        <div
+          className={`min-h-[2rem] rounded bg-zinc-900/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.25em] text-zinc-200 shadow transition-opacity ${
+            alert ? "opacity-100" : "opacity-0"
+          }`}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {alert}
+        </div>
       </div>
 
       <input
